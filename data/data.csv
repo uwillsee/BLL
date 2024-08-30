@@ -1,0 +1,29 @@
+index,Title,Author,Gender,DateAcquired,Classification,Department,Medium,Country,Grade,Pages
+01/08/2022,Blindness,Jose Saramago,Male,1995,Novel,Fiction,,Portugal,,320
+01/09/2022,Night in Lisbon,Erich Maria Remarque,Male,1962,Novel,Realism,,Germany,,288
+01/10/2022,Greenlights,Matthew McConaughey,Male,2020,Memoir,Motivation,,USA,,320
+01/11/2022,Metro 2033,Dmitry Glukhovsky,Male,2005,Novel,Post-apocalyptic,,Russia,,384
+01/01/2023,The Maias,Jose Maria de Eca de Queiros,Male,1888,Novel,Epic,,Portugal,,664
+01/02/2023,The Secret Life of Bees,Sue Monk Kidd,Female,2002,Novel,Realism,,USA,,384
+01/03/2023,Other Drums,Lena Eltang,Female,2011,Novel,Psychological Thriller,,Russia,,640
+01/04/2023,Defying Hitler,Sebastian Haffner,Male,1939,Memoir,History,7.5,Germany,7.5,448
+01/05/2023,Troy Against All,Alexander Stesin,Male,2022,Novel,Realism,6,Russia,6,424
+01/06/2023,The Goldfinch,Donna Tartt,Female,2013,Novel,Realism,7.4,USA,7.4,832
+01/07/2023,De Profundis,Oscar Wilde,Male,1905,Letter,Confession,6.7,United Kingdom,6.7,256
+01/07/2023,Convenience Store Woman,Sayaka Murata,Female,2016,Novel,Realism,7.8,Japan,7.8,144
+01/08/2023,The Midnight Library,Matt Haig,Male,2020,Novel,Fiction,5.6,United Kingdom,5.6,416
+01/08/2023,The Luzhin Defense,Vladimir Nabokov,Male,1930,Novel,Realism,8.6,Russia,8.6,288
+01/09/2023,To Paradise,Hanya Yanagihara,Female,2022,Novel,Fiction,7,USA,7,576
+01/10/2023,The Woman Destroyed,Simone de Beauvoir,Female,1967,Novella,Realism,6.8,France,6.8,250
+01/11/2023,East of Eden,John Steinbeck,Male,1952,Novel,Realism,7.8,USA,7.8,770
+01/01/2024,The Woman in the Dunes,Kobo Abe,Male,1962,Novel,Fiction,7.95,Japan,7.95,224
+01/02/2024,Aunt Julia and the Scriptwriter,Mario Vargas Llosa,Male,1977,Novel,Realism,5.8,Peru,5.8,448
+01/03/2024,Small Bird Hearts,Victoria Lloyd-Barlow,Female,2023,Novel,Realism,6.5,United Kingdom,6.5,310
+01/04/2024,The Sympathizer,Viet Thanh Nguyen,Male,2015,Novel,Realism,7,Vietnam,7,491
+01/05/2024,The Name of the Rose,Umberto Eco,Male,1980,Novel,Mystery,8,Italy,8,713
+01/06/2024,A History of the World in 10½ Chapters,Julian Barnes,Male,1989,Novel,Postmodern,8.1,United Kingdom,8.1,371
+01/07/2024,The Elementary Particles,Michel Houellebecq,Male,1998,Novel,Fiction,6.3,France,6.3,320
+01/08/2024,Mrs Dalloway,Virginia Woolf,Female,1925,Novel,Realism,,United Kingdom,,220
+01/09/2024,The Three-Body Problem,Liu Cixin,Male,2006,Novel,Fiction,,China,,433
+01/10/2024,Judas,Amos Oz,Male,2014,Novel,Realism,,Israel,,360
+01/11/2024,The Financier,Theodore Dreiser,Male,1912,Novel,Realism,,USA,,700
