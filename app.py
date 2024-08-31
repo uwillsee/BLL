@@ -74,7 +74,7 @@ def acquired_plot(total=True):
     fig.add_trace(
         go.Scatter(
             x=temp['DateAcquired'],
-            y=temp['Artist']
+            y=temp['Author']
         )
     )
 
@@ -101,7 +101,7 @@ def sunburst(countries=None):
     return fig
 
 def genders_chart():
-    df = pd.pivot_table(data, index='DateAcquired', columns='Gender', values='Artist', aggfunc='count')
+    df = pd.pivot_table(data, index='DateAcquired', columns='Gender', values='Author', aggfunc='count')
     df = df.reset_index()
 
     fig = go.Figure()
@@ -129,7 +129,7 @@ def genders_chart():
     ))
 
     fig.update_layout(
-        title=dict(text='Gender of Artists Over Time',
+        title=dict(text='Gender of Authors Over Time',
                    x=0.05, y=0.95
                    ),
         showlegend=True,
@@ -184,7 +184,7 @@ def line_chart_nationalities():
                   )
 
     fig.update_layout(
-        title=dict(text='Diversity of Artists\' Origins Over Time',
+        title=dict(text='Diversity of Authors\' Origins Over Time',
                    x=0.05, y=0.95
                    ),
         template='ggplot2',
@@ -239,7 +239,7 @@ def statistics(countries = None):
         temp = data[data['Country'].isin(countries)]
     else:
         temp = data.copy()
-    unique_artsits = temp['Artist'].unique().shape[0]
+    unique_artsits = temp['Author'].unique().shape[0]
     unique_artworks = temp['Title'].unique().shape[0]
     gender_counts = temp['Gender'].value_counts(normalize = True) * 100
     try:
@@ -312,51 +312,7 @@ def donut_chart(countries = None):
     data_drawings = data_drawings[data_drawings['Medium']
                                   != 'Not known'].reset_index()
 
-    # Create donut graph for different techniques
-    donut_chart = go.Figure()
-    sum_counts = data_drawings['Technique'].value_counts().sort_index()
-    # Colour palette for graph
-    colors = ['#516CCC',  # Acrylic
-
-              '#7799E0',  # Charcoal
-
-              '#6084B6',  # Crayoin
-
-              '#82BCFA',  # goauche
-
-              '#3DCCC0',  # ink
-
-              '#00ae91',  # mixed
-
-              '#00C2B2',  # oil
-
-              '#63E6E3',  # other
-
-              '#8DD8EB',  # paint
-
-              '#4A4BC7',  # pastel
-
-              '#81D7CF',  # pencil
-
-              '#7087CF',  # tempera
-
-              '#7DADE6']  # watecolour
-
-    donut_chart.add_trace(go.Pie(values=sum_counts,
-                                 labels=sum_counts.index,
-                                 hole=0.88,
-                                 hovertemplate="%{label}<br>Number of artworks=%{value}<extra></extra>",
-                                 marker=dict(colors=colors, line=dict(color='#ffffff', width=1))
-                                 ))
-    donut_chart.update_layout(
-        title=dict(text='Most Popular Painting Techniques',font=dict(color='black')),
-        showlegend=True,
-        annotations=[dict(text='Techniques<br>used<br>by artists', x=0.5, y=0.5, font_size=20, showarrow=False)])
-
-    return donut_chart
-
-
-app = dash.Dash(__name__,
+  app = dash.Dash(__name__,
                 title="MoMA on Tour", suppress_callback_exceptions=True)
 
 app.layout = dcc.Loading(
