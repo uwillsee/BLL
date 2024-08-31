@@ -3,16 +3,15 @@ from dash import dcc, html
 from dash.dependencies import Input, Output
 import numpy as np
 import pandas as pd
-from re import search
-import plotly.graph_objects as go
 import plotly.express as px
+import plotly.graph_objects as go
 import warnings
 warnings.filterwarnings('ignore')
 
 # Загрузка данных
 data = pd.read_csv('data.csv')
 
-# Функции аналитики
+# Функции для отображения данных
 def classes_fromto(year1=1929, year2=2020):
     return px.bar(data[(data['DateAcquired'] >= year1) & (data['DateAcquired'] <= year2)]['Classification'].value_counts(), labels=dict(value='count', index='classes')).update_layout(showlegend=False, title=f'Classes distribution from {year1} to {year2}')
 
@@ -45,71 +44,157 @@ def bar_with_animation():
     fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', title='Classification of Acquired Artworks')
     return fig
 
-# Создание Dash-приложения
-app = dash.Dash(__name__, suppress_callback_exceptions=True)
-server = app.server
+def acquired_plot(total=True):
+    if total:
+        temp = data.groupby('DateAcquired').count().cumsum().reset_index()
+    else:
+        temp = data.groupby('DateAcquired').count().reset_index()
 
-app.layout = dcc.Loading(
-    html.Div(
-        children=[
-            html.Div(
-                children=[
-                    html.Div(
-                        children=[
-                            html.Img(
-                                src=app.get_asset_url("moma-logo.png"),
-                                style={'width': '140%', 'margin-top': '0px'}
-                            ),
-                        ],
-                        style={'width': '25%'}
-                    ),
-                    html.Div(
-                        children=[
-                            html.H5('The Museum of Modern Art (MoMA) acquired its first artworks in 1929.'
-                                    ' Today, the Museum’s evolving collection contains almost 200,000 works'
-                                    ' from around the world spanning the last 150 years. In this dashboard, '
-                                    'you can go on tour with the MoMA museum by getting insights into which '
-                                    'artworks it acquired over the years and by which artists. Next, you can '
-                                    'see MoMA per country by checking which country the art pieces come from. '
-                                    'The art collections include an ever-expanding range of visual expression, '
-                                    'including painting, sculpture, photography, architecture, design, and '
-                                    'film art. Travel through time and space with MoMA and enjoy the tour...'),
-                        ],
-                        className='card',
-                        style={"height": "25%"},
-                    ),
-                      ],
-                className='body',
-                style={'width': '50%'}
-            ),
-            html.Div(
-                children=[
-                    dcc.Loading([
-                        dcc.Graph(figure=map_with_animation(), id='main-choropleth')
-                    ], type='default', color='black', id="map-loading")
-                ],
-                className='card',
-                style={'width': '50%', 'margin-bottom': '7px'}
-            ),
-        ],
-        className='container'
-    ),
-    type='cube', color='white'
-)
+    fig = go.Figure()
 
-@app.callback(
-    Output('unique-artists', 'children'),
-    Output('unique-artworks', 'children'),
-    Output('male-count', 'children'),
-    Output('female-count', 'children'),
-    Output('sunburst', 'figure'),
-    Output('donut', 'figure'),
-    Input('countries-dropdown', 'value')
-)
-def update_stats(value):
-    stats = statistics(value)
-    return stats[0], stats[1], stats[2], stats[3], sunburst(value), donut_chart(value)
+    fig.add_trace(
+        go.Scatter(
+            x=temp['DateAcquired'],
+            y=temp['Author']
+        )
+    )
 
+    fig.update_layout(
+        title='Total number of art acquired' if total else 'Arts acquired',
+        xaxis_title='Year',
+        yaxis_title='Arts',
+    )
 
-if __name__ == '__main__':
-    app.run_server(debug=True)
+    return fig
+
+def sunburst(countries=None):
+    if countries:
+        temp = data[data['Country'].isin(countries)]
+    else:
+        temp = data.copy()
+    fig = px.sunburst(temp, path=['Department', 'Classification'], color_discrete_sequence=['#4a4bc7'])
+    fig.update_traces(
+        go.Sunburst(hovertemplate='Number of artworks=%{value}'
+    ))
+    fig.update_layout(
+        title=dict(text='Artworks Classification Arranged by Department', font=dict(color='black'))
+    )
+    return fig
+
+def genders_chart():
+    df = pd.pivot_table(data, index='DateAcquired', columns='Gender', values='Author', aggfunc='count')
+    df = df.reset_index()
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=df['DateAcquired'], y=df['Female'],
+        fillcolor='rgb(111, 231, 219)',
+        mode='lines',
+        line=dict(width=0.5, color='rgb(111, 231, 219)'),
+        stackgroup='one',
+        name='Female',
+        groupnorm='percent',
+        hovertemplate='Year=%{x}' + '<br>Percentage=%{y:.2f}' + '%'
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=df['DateAcquired'], y=df['Male'],
+        fillcolor='rgb(74, 75, 199)',
+        mode='lines',
+        line=dict(width=0.5, color='rgb(74, 75, 199)'),
+        stackgroup='one',
+        name='Male',
+        hovertemplate='Year: %{x}' + '<br>Percentage: %{y:.2f}' + '%'
+    ))
+
+    fig.update_layout(
+        title=dict(text='Gender of Authors Over Time',
+                   x=0.05, y=0.95
+                   ),
+        showlegend=True,
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=0.95,
+            xanchor="left",
+            x=0.02,
+            font=dict(family="Arial", size=12),
+            bordercolor="white",
+            borderwidth=1,
+            itemsizing='trace'
+        ),
+        xaxis_type='linear',
+        yaxis=dict(
+            type='linear',
+            range=[1, 100],
+            ticksuffix='%'))
+
+    fig.update_yaxes(title='Percentage of Artworks Acquired')
+    fig.update_xaxes(title='Year Acquired')
+    fig.update_layout(template="simple_white")
+
+    return fig
+
+def line_chart_nationalities():
+    temp = data.groupby(['DateAcquired', 'Country'])['Title'].count().reset_index().rename({'Title': 'Count'}, axis=1)
+    temp2 = temp.groupby('DateAcquired')['Country'].count().reset_index()
+
+    new_country = []
+    new = []
+    temp2['New'] = np.nan
+    for year in temp['DateAcquired'].unique():
+        country_year = temp[temp['DateAcquired'] == year]['Country'].values
+        new_year = [country for country in country_year if country not in new_country]
+        for n in new_year: new_country.append(n)
+        new.append(len(new_country))
+    temp2['New'] = new
+    temp2.rename({'Country': 'Different nationalities by year', 'New': 'Different nationalities until that year'},
+                 axis=1, inplace=True)
+
+    fig = px.line(temp2, x='DateAcquired',
+                  y=['Different nationalities by year', 'Different nationalities until that year'],
+                  hover_data={'DateAcquired': False, 'variable': False, 'value': True},
+                  color_discrete_sequence=['#9acfbf','#3eceaf'],
+                  labels={'DateAcquired': 'Year Artworks were Acquired', 'variable': '', 'value': 'Number of Nationalities'},
+                  height=350,
+                  width=690
+                  )
+
+    fig.update_layout(
+        title=dict(text='Diversity of Authors\' Origins Over Time',
+                   x=0.05, y=0.95
+                   ),
+        template='ggplot2',
+        hovermode="x",
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=0.95,
+            xanchor="left",
+            x=0.02,
+            font=dict(family="Arial", size=12),
+            bordercolor="white",
+            borderwidth=1,
+            itemsizing='trace'
+        )
+    )
+    fig.update_traces(hovertemplate='%{y}<extra></extra>',
+                      line=dict(width=3))
+
+    return fig
+
+def map_with_animation():
+    temp = data.groupby(['DateAcquired', 'Country'])['Title'].count().unstack().replace(np.nan, 0).cumsum()
+    temp = pd.DataFrame(temp.stack()).reset_index().rename({0: 'Count'}, axis=1)
+
+    temp['Countlog'] = np.log(temp['Count'])
+
+    fig = px.choropleth(temp, locations='Country', locationmode='country names',
+                        color='Countlog',
+                        color_continuous_scale=['#e8e6ff', '#dcd9ff', '#b2b0ff', '#8889e0', '#6063b6', '#4a4bc7', '#33357f'],
+                        animation_frame='DateAcquired',
+                        range_color=(0, temp['Countlog'].max()),
+                        hover_name='Country',
+                        hover_data={'Country':False,'Count':True,'Countlog':False,'DateAcquired':False},
+                        labels={'DateAcquired': 'Year', 'Countlog': 'Acquired
