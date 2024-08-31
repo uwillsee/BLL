@@ -1,11 +1,11 @@
 Brotli==1.0.9
 click==7.1.2
-dash==1.19.0
-dash-core-components==1.15.0
-dash-html-components==1.1.2
-dash-renderer==1.9.0
-dash-table==4.11.2
-Flask==1.1.2
+dash==2.11.1
+dash-core-components==2.0.0
+dash-html-components==2.0.0
+dash-renderer==2.0.0
+dash-table==5.0.0
+Flask==2.3.2
 Flask-Compress==1.9.0
 future==0.18.2
 itsdangerous==1.1.0
@@ -26,5 +26,5 @@ tornado==6.1
 traitlets
 urllib3==1.26.4
 wcwidth==0.2.5
-Werkzeug==1.0.1
-gunicorn
+Werkzeug==2.3.6
+gunicorn==20.1.0
