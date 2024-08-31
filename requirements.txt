@@ -7,7 +7,7 @@ future==0.18.2
 itsdangerous==1.1.0
 Jinja2==2.11.3
 MarkupSafe==1.1.1
-numpy==<последняя версия>
+numpy==1.25.2
 pandas==1.5.3
 plotly==5.15.0
 python-dateutil==2.8.1
@@ -19,7 +19,7 @@ six==1.15.0
 threadpoolctl==2.1.0
 toml==0.10.2
 tornado==6.1
-traitlets==<последняя версия>
+traitlets==5.9.0
 urllib3==1.26.4
 wcwidth==0.2.5
 Werkzeug==2.3.6
