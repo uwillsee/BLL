@@ -1,5 +1,6 @@
 import dash
-from dash import dcc, html
+import dash_core_components as dcc
+import dash_html_components as html
 from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
 import gunicorn
@@ -17,11 +18,11 @@ warnings.filterwarnings('ignore')
 data = pd.read_csv('data.csv')
 
 
-def classes_fromto(year1=1888, year2=2023):
+def classes_fromto(year1=1929, year2=2020):
     return px.bar(data[(data['DateAcquired'] >= year1) & (data['DateAcquired'] <= year2)]['Classification'].value_counts(), labels=dict(value='count', index='classes')).update_layout(showlegend=False, title=f'Classes distribution from {year1} to {year2}')
 
 
-def countries_distribution(year=2023, group_smallest=True, group_method='mean'):
+def countries_distribution(year=2020, group_smallest=True, group_method='mean'):
     temp = data[data['DateAcquired'] <= year]['Country'].value_counts()
     if group_smallest:
         other = temp[temp <= (np.mean(temp) if group_method ==
@@ -208,4 +209,326 @@ def line_chart_nationalities():
 def map_with_animation():
     # 2 options (comment the one you don't want)
     ### With growth
-    temp = data.groupby(['DateAcquired', 'Country'])['Title'].count
+    temp = data.groupby(['DateAcquired', 'Country'])['Title'].count().unstack().replace(np.nan, 0).cumsum()
+    temp = pd.DataFrame(temp.stack()).reset_index().rename({0: 'Count'}, axis=1)
+
+    # logarithm
+    temp['Countlog'] = np.log(temp['Count'])
+
+    fig = px.choropleth(temp, locations='Country', locationmode='country names',
+                        color='Countlog',
+                        color_continuous_scale=['#e8e6ff', '#dcd9ff', '#b2b0ff', '#8889e0', '#6063b6', '#4a4bc7', '#33357f'],
+                        animation_frame='DateAcquired',
+                        range_color=(0, temp['Countlog'].max()),
+                        hover_name='Country',
+                        hover_data={'Country':False,'Count':True,'Countlog':False,'DateAcquired':False},
+                        labels={'DateAcquired': 'Year', 'Countlog': 'Acquired<br>Artworks (log)','Count': 'Acquired Artworks'},
+                        #projection="natural earth",
+                        height=600, width=710)
+    fig.update_layout(
+        title=dict(text='Artworks\' Nationality Evolution',
+                                           x=0.1,y=0.95,
+                   font=dict(color='black')
+            )
+    )
+    return fig
+
+
+def statistics(countries = None):
+    if countries:
+        temp = data[data['Country'].isin(countries)]
+    else:
+        temp = data.copy()
+    unique_artsits = temp['Artist'].unique().shape[0]
+    unique_artworks = temp['Title'].unique().shape[0]
+    gender_counts = temp['Gender'].value_counts(normalize = True) * 100
+    try:
+        male = str(round(gender_counts['Male'], 2)) + '%'
+    except:
+        male = '0.0%'
+    try:
+        female = str(round(gender_counts['Female'], 2)) + '%'
+    except:
+        female = '0.0%'
+
+
+    return unique_artsits, unique_artworks, male, female
+
+
+def unique_countries():
+    # select countries with paintings works
+    classification_paint = ['Drawing', 'Painting', 'Work on Paper']
+    data_withpaint = data[data.Classification.isin(classification_paint)]
+
+    return data_withpaint['Country'].sort_values().unique()
+
+def filter_technique(technique):
+    if search('and', technique):
+        return 'Mixed'
+    elif search('mixed', technique.lower()):
+        return 'Mixed'
+    elif search('oil', technique.lower()):
+        return 'Oil'
+    elif search('charcoal', technique.lower()):
+        return 'Charcoal'
+    elif search('acrylic', technique.lower()):
+        return 'Acrylic'
+    elif search('tempera', technique.lower()):
+        return 'Tempera'
+    elif search('pencil', technique.lower()):
+        return 'Pencil'
+    elif search('ink', technique.lower()):
+        return 'Ink'
+    elif search('watercolour', technique.lower()):
+        return 'Watercolour'
+    elif search('watercolor', technique.lower()):
+        return 'Watercolour'
+    elif search('crayon', technique.lower()):
+        return 'Crayon'
+    elif search('gouache', technique.lower()):
+        return 'Gouache'
+    elif search('paint', technique.lower()):
+        return 'Paint'
+    elif search('dye', technique.lower()):
+        return 'Paint'
+    elif search('pigment', technique.lower()):
+        return 'Paint'
+    elif search('pastel', technique.lower()):
+        return 'Pastel'
+
+    else:
+        return 'Other'
+
+
+def donut_chart(countries = None):
+    if countries:
+        temp = data[data['Country'].isin(countries)]
+    else:
+        temp = data.copy()
+    data_drawings = temp[(data.Classification == 'Drawing') | (
+        data.Classification == 'Painting') | (data.Classification == 'Work on Paper')]
+    data_drawings['Technique'] = data_drawings['Medium'].apply(
+        filter_technique)
+    data_drawings = data_drawings[data_drawings['Medium']
+                                  != 'Not known'].reset_index()
+
+    # Create donut graph for different techniques
+    donut_chart = go.Figure()
+    sum_counts = data_drawings['Technique'].value_counts().sort_index()
+    # Colour palette for graph
+    colors = ['#516CCC',  # Acrylic
+
+              '#7799E0',  # Charcoal
+
+              '#6084B6',  # Crayoin
+
+              '#82BCFA',  # goauche
+
+              '#3DCCC0',  # ink
+
+              '#00ae91',  # mixed
+
+              '#00C2B2',  # oil
+
+              '#63E6E3',  # other
+
+              '#8DD8EB',  # paint
+
+              '#4A4BC7',  # pastel
+
+              '#81D7CF',  # pencil
+
+              '#7087CF',  # tempera
+
+              '#7DADE6']  # watecolour
+
+    donut_chart.add_trace(go.Pie(values=sum_counts,
+                                 labels=sum_counts.index,
+                                 hole=0.88,
+                                 hovertemplate="%{label}<br>Number of artworks=%{value}<extra></extra>",
+                                 marker=dict(colors=colors, line=dict(color='#ffffff', width=1))
+                                 ))
+    donut_chart.update_layout(
+        title=dict(text='Most Popular Painting Techniques',font=dict(color='black')),
+        showlegend=True,
+        annotations=[dict(text='Techniques<br>used<br>by artists', x=0.5, y=0.5, font_size=20, showarrow=False)])
+
+    return donut_chart
+
+
+app = dash.Dash(__name__,
+                title="MoMA on Tour", suppress_callback_exceptions=True)
+
+app.layout = dcc.Loading(
+    html.Div(
+        children=[
+            #1st row
+            html.Div(
+                children=[
+                #1st column
+                html.Div(
+                    children=[
+                    html.Div(
+                        children=[
+                            html.Img(
+                                src=app.get_asset_url("moma-logo.png"),
+                                style={'width': '140%', 'margin-top': '0px'}
+                            ),
+                        ],
+                    style={'width': '25%'}
+                    ),
+                        html.Div(
+                            children=[
+                                html.H5('The Museum of Modern Art (MoMA) acquired its first artworks in 1929.'
+                                        ' Today, the Museum’s evolving collection contains almost 200,000 works'
+                                        ' from around the world spanning the last 150 years. In this dashboard, '
+                                        'you can go on tour with the MoMA museum by getting insights into which '
+                                        'artworks it acquired over the years and by which artists. Next, you can '
+                                        'see MoMA per country by checking which country the art pieces come from. '
+                                        'The art collections include an ever-expanding range of visual expression, '
+                                        'including painting, sculpture, photography, architecture, design, and '
+                                        'film art. Travel through time and space with MoMA and enjoy the tour...'),
+                                ],
+                                className='card',
+                                style={"height": "25%"},
+                        ),
+                        html.Div(
+                            dcc.Graph(
+                                figure=line_chart_nationalities(),
+                                className='card',
+                                style={"height": "60%"},
+                            ),
+                        ),
+                    ],
+                    className='body',
+                    style={'width': '50%'}
+                ),
+                #2nd column
+                html.Div(
+                    children=[
+                        dcc.Loading([
+                                dcc.Graph(figure=map_with_animation(),
+                                          id='main-choropleth')],
+                                type='default', color='black', id="map-loading")
+                    ],
+                    className='card',
+                    style={'width': '50%', 'margin-bottom': '7px'}
+                ),
+            ],
+            className='container'
+        ),
+
+        #2nd row
+        html.Div(
+            children=[
+                    dcc.Graph(
+                        figure=genders_chart(),
+                        className='card',
+                        style={
+                            "width": "40%"
+                        }
+                    ),
+                    dcc.Graph(
+                        figure=bar_with_animation(),
+                        className='card',
+                        style={
+                            "width": "55%"
+                        }
+                    ),
+            ],
+            className='container'
+        ),
+
+        #3rd row
+        html.Div(
+            children=[
+                html.Div(
+                    children=[
+                        html.H2("Choose countries"),
+                                        dcc.Dropdown(
+                                            options=[{'label': v, 'value': v}
+                                                     for v in unique_countries()],
+                                            multi=True,
+                                            id='countries-dropdown'),
+                                    ],
+                                    className='first card',
+                                    style={'width': '40%', 'float': 'right'}
+                                ),
+                html.Div(children=[
+                    html.H2('Artists'),
+                    html.H3('123', id='unique-artists')
+                ],
+                    className='card small'
+                ),
+                html.Div(
+                    children=[
+                        html.H2('Artworks'),
+                        html.H3('123', id='unique-artworks')
+                    ],
+                    className='card small'
+                ),
+                html.Div(
+                    children=[
+                        html.H2('Gender'),
+                        html.H3('Male:'),
+                        html.H3('123%', id='male-count'),
+                        html.H3(' Female:'),
+                        html.H3('123%', id='female-count')
+                    ],
+                    className=' card small'
+                ),
+            ],
+            className='container'
+        ),
+
+        #4th row
+        html.Div(
+            children=[
+                dcc.Graph(
+                    figure=sunburst(),
+                    className='card',
+                    style={'width': '50%'},
+                    id='sunburst'
+                ),
+                dcc.Graph(
+                    figure=donut_chart(),
+                    className='card',
+                    style={'width': '50%'},
+                    id='donut'
+                )
+
+            ],
+            className='container'
+        ),
+
+
+
+        html.Footer([
+            html.Label(["Anastasiia Tagiltseva, m20200041 | Beatriz Pereira, m20200674 | Nadine Aldesouky, m20200568 | Svitlana Vasylyeva, m20200617| "
+                    "Source: ", html.A("MoMA",
+                                          href="https://github.com/MuseumofModernArt/collection", target="_blank")])
+
+    ],
+        className="footer"
+    ),
+    ]),
+    type = 'cube',  color='white')
+
+server = app.server
+
+@app.callback(
+    Output('unique-artists', 'children'),
+    Output('unique-artworks', 'children'),
+    Output('male-count', 'children'),
+    Output('female-count', 'children'),
+    Output('sunburst', 'figure'),
+    Output('donut', 'figure'),
+    Input('countries-dropdown', 'value')
+)
+def update_stats(value):
+    stats = statistics(value)
+    return stats[0], stats[1], stats[2], stats[3], sunburst(value), donut_chart(value)
+
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
