@@ -78,14 +78,7 @@ app.layout = dcc.Loading(
                         className='card',
                         style={"height": "25%"},
                     ),
-                    html.Div(
-                        dcc.Graph(
-                            figure=line_chart_nationalities(),
-                            className='card',
-                            style={"height": "60%"},
-                        ),
-                    ),
-                ],
+                      ],
                 className='body',
                 style={'width': '50%'}
             ),
